@@ -23,3 +23,7 @@ func Mul(x int, y int) int {
 func Div(x float64, y float64) float64 {
   return (x / y)
 }
+
+func Shreylol(x int, y int) int {
+	return (x + y + x)
+}
