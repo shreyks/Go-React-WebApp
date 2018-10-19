@@ -1,4 +1,4 @@
-package main
+package main 
 
 import (
    "fmt"
@@ -14,7 +14,7 @@ var err error                                  // declaring the db globally
 var r *gin.Engine
 
 type Person struct {
-	ID uint `json:"id"`
+	ID int `json:"id"`
 	Logged int `json:"logged"`
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -42,6 +42,11 @@ type Highscore struct {
   Hscore int `json:"hscore"`
 }
 
+type LoginToken struct {
+  Pid int `json:"pid"`
+  Authenticated int `json:"authenticated"`
+}
+
 
 func main() {
    db,err = gorm.Open("sqlite3","./test.db")     
@@ -54,15 +59,51 @@ func main() {
    r.POST("/signup",MakeUser)	//signing up
    r.POST("/authenticate",Authenticate)	//login authenticate
    r.GET("/getgenres",GetGenres)	//string list of genres
-   r.GET("/getquestions/:genre",GetQuestions)	//return JSON of array of questions
+   r.GET("/getquestions/:qid",GetQuestions)	//return JSON of array of questions
+   r.GET("/getquizes/:genre",GetQuizes)
+   r.GET("/getusers",GetUsers)
+   r.DELETE("/deleteuser/:pid",DeleteUser)
+   r.POST("/addquiz",AddQuiz)
+   r.GET("/getquiz",GetallQs)
    r.GET("/")
    r.Use((cors.Default()))
    r.Run(":8080")
 }
-
-func initializeRoutes() {
-	// r.POST("/signup", MakeUser)	//signing up
+func GetallQs(c *gin.Context) {
+  var quiz []Questions
+  db.Find(&quiz)
+  c.Header("access-control-allow-origin", "*")
+  c.JSON(200,quiz)
 }
+
+func AddQuiz(c *gin.Context) {
+  var ques Questions
+  c.BindJSON(&ques)
+  db.Create(&ques)
+  c.Header("access-control-allow-origin", "*") // Why am I doing this? Find out. Try running with this line commented
+  c.JSON(200,ques)
+}
+
+func GetUsers(c *gin.Context) {
+  var users[] Person
+  if err := db.Find(&users).Error; err != nil {
+    c.AbortWithStatus(404)
+    fmt.Println(err)
+  } else {
+    c.Header("access-control-allow-origin", "*") // Why am I doing this? Find out. Try running with this line commented
+    c.JSON(200, users)
+  }
+}
+func DeleteUser(c *gin.Context) {
+  var user Person
+  id := c.Params.ByName("pid")
+  d := db.Where("id = ?", id).Delete(&user)
+  fmt.Println(d)
+  c.Header("access-control-allow-origin", "*")
+  c.JSON(200, gin.H{"id #" + id: "deleted"})
+}
+
+
 func MakeUser(c *gin.Context) {
    var person Person
    c.BindJSON(&person)
@@ -79,44 +120,42 @@ func Authenticate(c *gin.Context) {
 	if err:=db.Where("username = ?", user.Username).First(&person).Error; err!=nil{
 	   fmt.Printf("%s\n",err)
 	}
+  var token LoginToken
 	c.Header("access-control-allow-origin", "*")
 	if user.Password == person.Password {
-		c.JSON(200,gin.H{
-			"authenticated":1,
-			"id":person.ID,
-		   })
+    token.Authenticated = 1
+    token.Pid = person.ID
+		c.JSON(200,token)
 	} else {
-		c.JSON(200,gin.H{
-			"authenticated":0,
-			})
+    token.Authenticated = 0
+    token.Pid = -1
+		c.JSON(200,token)
 	}
 }
 
 func GetGenres(c *gin.Context) {
 	var genres []string = d.List_genre()
-	c.Header("access-control-allow-origin", "*")
+  c.Header("access-control-allow-origin", "*")
 	c.JSON(200,genres)
 }
 
 
 func GetQuestions(c *gin.Context) {
-	var genre string = c.Params.ByName("genre")
-	var quiz []Quizzes
-	db.Where("genre = ?",genre).Find(&quiz)
+	var qid string = c.Params.ByName("qid")
 	var questions []Questions
-	for _,element := range quiz {
-	 var list []Questions
-	 db.Where("quizno = ?", element.ID).Find(&list)  
-	 for _,j := range list {
-	   questions = append(questions,j)
-	 }
-	}
+  db.Where("quizno = ?", qid).Find(&questions)  
+  c.Header("access-control-allow-origin", "*")
 	c.JSON(200,questions)
 }
- 
 
 
-
+func GetQuizes(c *gin.Context) {
+  var genre string = c.Params.ByName("genre")
+  var quiz []Quizzes
+  db.Where("genre = ?",genre).Find(&quiz)
+  c.Header("access-control-allow-origin", "*")
+  c.JSON(200,quiz)
+}
 
 
 

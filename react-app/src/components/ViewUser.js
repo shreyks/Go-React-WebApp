@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './DeletePerson.css';
 
-class DeletePerson extends Component {
+class ViewUser extends Component {
   constructor() {
     super();
     this.state = {
@@ -13,7 +13,7 @@ class DeletePerson extends Component {
   }
     // Lifecycle hook, runs after component has mounted onto the DOM structure
     componentDidMount() {
-      const request = new Request('http://127.0.0.1:8080/people/');
+      const request = new Request('http://127.0.0.1:8080/getusers');
       fetch(request)
         .then(response => response.json())
           .then(data => this.setState({data: data}));
@@ -23,20 +23,26 @@ class DeletePerson extends Component {
     }
 
     handleSubmit (event) {
-      event.preventDefault();
-      fetch('http://localhost:8080/people/' + this.state.value, {
-       method: 'delete',
-     })
-        .then(response => {
-          if(response.status >= 200 && response.status < 300)
-            this.setState({submitted: true});
-        	setTimeout(document.location.reload(), 5000);
-        });
+      if(this.state.value == 102){
+        alert("Cant delete the admin")
+      }
+      else {
+        event.preventDefault();
+        fetch('http://localhost:8080/deleteuser/' + this.state.value, {
+        method: 'delete',
+      })
+          .then(response => {
+            if(response.status >= 200 && response.status < 300)
+              this.setState({submitted: true});
+          });
+      }
+      window.location.reload();
     }
-
  render() {
+
+   if(localStorage.getItem('admin') == 1){
     return (
-      <div className="App">
+<div className="App">
         <header className="App-header">
           <h1 className="App-title">Deleting Someone</h1>
         </header>
@@ -46,20 +52,14 @@ class DeletePerson extends Component {
           <thead>
             <tr>
               <th>Check to Delete</th>
-              <th>ID</th>
-              <th>First Name</th>
-              <th>Last Name</th>
-              <th>City</th>
+              <th>Username</th>
             </tr>
           </thead>
           <tbody>{this.state.data.map((item, key)=>{
                return (
                   <tr key = {key}>
                       <td><input type="radio" name="radio_button" value={item.id} onClick={this.handleRadioInput}/></td>
-                      <td>{item.id}</td>
-                      <td>{item.firstname}</td>
-                      <td>{item.lastname}</td>
-                      <td>{item.city}</td>
+                      <td>{item.username}</td>
                   </tr>
                 )
               })}
@@ -68,11 +68,15 @@ class DeletePerson extends Component {
        <button type="submit" className="btn btn-default">Submit</button>
       </form>
       { this.state.submitted &&
-        <h3>Dat nibba deleted</h3>
+        <h3>Deleted</h3>
       }
       </div>
     );
+    }
+    else{
+      return (<p>You need to be an admin</p>);
+    }
   }
 }
 
-export default DeletePerson;
+export default ViewUser;

@@ -1,4 +1,4 @@
-# Go-React-Boilerplate
+# Go-React APP
 Boilerplate for SSAD Assignment 2
 
 If you're using this repo as reference, star it.

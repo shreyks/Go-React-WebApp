@@ -54,7 +54,7 @@ func Authenticate(c *gin.Context) {
       fmt.Printf("%s\n",err)
    }
    c.Header("access-control-allow-origin", "*") // Why am I doing this? Find out. Try running with this line commented
-   if user.Password == person.Password {
+   if user.password == person.Password {
    	c.JSON(200,gin.H{
    		person.Logged = 1
    		"authenticated":1,
@@ -63,6 +63,7 @@ func Authenticate(c *gin.Context) {
    } else {
    	c.JSON(200,gin.H{
    		"authenticated":0,
+         "id":nil,
    		})
    }
 
